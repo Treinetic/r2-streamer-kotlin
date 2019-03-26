@@ -1,3 +1,3 @@
-include ':r2-streamer'
+include ':r2-shared'
 
-rootProject.name = "r2-streamer-kotlin"
+rootProject.name = "r2-shared-kotlin"
