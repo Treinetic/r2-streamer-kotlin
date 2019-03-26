@@ -3,19 +3,29 @@ package org.readium.r2.streamer.config
 /**
  * Created by Nuwan on 3/25/19.
  */
-class Config {
+class Configurations {
 
-    var isReqiredEncryption: Boolean = false
-    var callback: Unit? = null
+    var needExport: Boolean = false
+    var callback: Callback? = null
+
+    interface Callback {
+        fun export(input: String): String
+    }
 
 
     companion object {
-        private val instance = Config()
+        private val instance = Configurations()
 
-        fun getInsance(): Config {
+        fun getInsance(): Configurations {
             return instance;
         }
     }
 
+
+    fun clear() {
+
+        needExport = false
+        callback = null
+    }
 
 }

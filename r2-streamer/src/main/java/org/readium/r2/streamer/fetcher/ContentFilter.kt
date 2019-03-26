@@ -13,6 +13,7 @@ import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
 import org.readium.r2.shared.*
+import org.readium.r2.streamer.config.Configurations
 import org.readium.r2.streamer.container.Container
 import java.io.File
 import java.io.InputStream
@@ -41,12 +42,14 @@ class ContentFiltersEpub(private val userPropertiesPath: String?) : ContentFilte
             var decodedInputStream = drmDecoder.decoding(input, resourceLink, container.drm)
             decodedInputStream = fontDecoder.decoding(decodedInputStream, publication, path)
             if ((resourceLink.typeLink == "application/xhtml+xml" || resourceLink.typeLink == "text/html")) {
-                decodedInputStream = if (publication.metadata.rendition.layout == RenditionLayout.Reflowable && resourceLink.properties.layout == null
-                        || resourceLink.properties.layout == "reflowable") {
-                    injectReflowableHtml(decodedInputStream, publication)
-                } else {
-                    injectFixedLayoutHtml(decodedInputStream)
-                }
+                decodedInputStream =
+                    if (publication.metadata.rendition.layout == RenditionLayout.Reflowable && resourceLink.properties.layout == null
+                        || resourceLink.properties.layout == "reflowable"
+                    ) {
+                        injectReflowableHtml(decodedInputStream, publication)
+                    } else {
+                        injectFixedLayoutHtml(decodedInputStream)
+                    }
             }
 
             return decodedInputStream
@@ -63,14 +66,16 @@ class ContentFiltersEpub(private val userPropertiesPath: String?) : ContentFilte
             decodedInputStream = fontDecoder.decoding(decodedInputStream, publication, path)
             val baseUrl = publication.baseUrl()?.removeLastComponent()
             if ((resourceLink.typeLink == "application/xhtml+xml" || resourceLink.typeLink == "text/html")
-                    && baseUrl != null) {
+                && baseUrl != null
+            ) {
                 decodedInputStream =
-                        if (publication.metadata.rendition.layout == RenditionLayout.Reflowable && (resourceLink.properties.layout == null
-                                        || resourceLink.properties.layout == "reflowable")) {
-                            injectReflowableHtml(decodedInputStream, publication)
-                        } else {
-                            injectFixedLayoutHtml(decodedInputStream)
-                        }
+                    if (publication.metadata.rendition.layout == RenditionLayout.Reflowable && (resourceLink.properties.layout == null
+                                || resourceLink.properties.layout == "reflowable")
+                    ) {
+                        injectReflowableHtml(decodedInputStream, publication)
+                    } else {
+                        injectFixedLayoutHtml(decodedInputStream)
+                    }
             }
             return decodedInputStream.readBytes()
         } ?: run {
@@ -81,6 +86,12 @@ class ContentFiltersEpub(private val userPropertiesPath: String?) : ContentFilte
     private fun injectReflowableHtml(stream: InputStream, publication: Publication): InputStream {
         val data = stream.readBytes()
         var resourceHtml = String(data)
+        if (Configurations.getInsance().needExport) {
+            Configurations.getInsance().callback?.let {
+                 resourceHtml =it.export(resourceHtml)
+                 Log.d("ContentFilter","html export called")
+            }
+        }
         // Inject links to css and js files
         var beginHeadIndex = resourceHtml.indexOf("<head>", 0, false) + 6
         var endHeadIndex = resourceHtml.indexOf("</head>", 0, false)
@@ -109,8 +120,12 @@ class ContentFiltersEpub(private val userPropertiesPath: String?) : ContentFilte
             resourceHtml = StringBuilder(resourceHtml).insert(endHeadIndex, element).toString()
             endHeadIndex += element.length
         }
-        resourceHtml = StringBuilder(resourceHtml).insert(endHeadIndex, getHtmlFont("/fonts/OpenDyslexic-Regular.otf")).toString()
-        resourceHtml = StringBuilder(resourceHtml).insert(endHeadIndex, "<style>@import url('https://fonts.googleapis.com/css?family=PT+Serif|Roboto|Source+Sans+Pro|Vollkorn');</style>\n").toString()
+        resourceHtml =
+            StringBuilder(resourceHtml).insert(endHeadIndex, getHtmlFont("/fonts/OpenDyslexic-Regular.otf")).toString()
+        resourceHtml = StringBuilder(resourceHtml).insert(
+            endHeadIndex,
+            "<style>@import url('https://fonts.googleapis.com/css?family=PT+Serif|Roboto|Source+Sans+Pro|Vollkorn');</style>\n"
+        ).toString()
 
         // Inject userProperties
         getProperties(publication.userSettingsUIPreset)?.let { propertyPair ->
@@ -120,15 +135,22 @@ class ContentFiltersEpub(private val userPropertiesPath: String?) : ContentFilte
                 if (match != null) {
                     val beginStyle = match.range.start + 7
                     var newHtml = html.value
-                    newHtml = StringBuilder(newHtml).insert(beginStyle, "${buildStringProperties(propertyPair)} ").toString()
+                    newHtml =
+                        StringBuilder(newHtml).insert(beginStyle, "${buildStringProperties(propertyPair)} ").toString()
                     resourceHtml = StringBuilder(resourceHtml).replace(Regex("""<html.*>"""), newHtml)
                 } else {
                     val beginHtmlIndex = resourceHtml.indexOf("<html", 0, false) + 5
-                    resourceHtml = StringBuilder(resourceHtml).insert(beginHtmlIndex, " style=\"${buildStringProperties(propertyPair)}\"").toString()
+                    resourceHtml = StringBuilder(resourceHtml).insert(
+                        beginHtmlIndex,
+                        " style=\"${buildStringProperties(propertyPair)}\""
+                    ).toString()
                 }
-            } ?:run {
+            } ?: run {
                 val beginHtmlIndex = resourceHtml.indexOf("<html", 0, false) + 5
-                resourceHtml = StringBuilder(resourceHtml).insert(beginHtmlIndex, " style=\"${buildStringProperties(propertyPair)}\"").toString()
+                resourceHtml = StringBuilder(resourceHtml).insert(
+                    beginHtmlIndex,
+                    " style=\"${buildStringProperties(propertyPair)}\""
+                ).toString()
             }
         }
         return resourceHtml.toByteArray().inputStream()
@@ -220,7 +242,7 @@ class ContentFiltersEpub(private val userPropertiesPath: String?) : ContentFilte
 
         readiumCSSProperty.put("name", preset.first.ref)
 
-        when(preset.first) {
+        when (preset.first) {
             ReadiumCSSName.hyphens -> {
                 readiumCSSProperty.put("value", "")
             }
@@ -287,44 +309,44 @@ class ContentFiltersEpub(private val userPropertiesPath: String?) : ContentFilte
 }
 
 val ltrPreset: MutableMap<ReadiumCSSName, Boolean> = mutableMapOf(
-        ReadiumCSSName.ref("hyphens") to false,
-        ReadiumCSSName.ref("ligatures") to false
+    ReadiumCSSName.ref("hyphens") to false,
+    ReadiumCSSName.ref("ligatures") to false
 )
 
 val rtlPreset: MutableMap<ReadiumCSSName, Boolean> = mutableMapOf(
-        ReadiumCSSName.ref("hyphens") to false,
-        ReadiumCSSName.ref("wordSpacing") to false,
-        ReadiumCSSName.ref("letterSpacing") to false,
-        ReadiumCSSName.ref("ligatures") to true
+    ReadiumCSSName.ref("hyphens") to false,
+    ReadiumCSSName.ref("wordSpacing") to false,
+    ReadiumCSSName.ref("letterSpacing") to false,
+    ReadiumCSSName.ref("ligatures") to true
 )
 
 val cjkHorizontalPreset: MutableMap<ReadiumCSSName, Boolean> = mutableMapOf(
-        ReadiumCSSName.ref("textAlignment") to false,
-        ReadiumCSSName.ref("hyphens") to false,
-        ReadiumCSSName.ref("paraIndent") to false,
-        ReadiumCSSName.ref("wordSpacing") to false,
-        ReadiumCSSName.ref("letterSpacing") to false
+    ReadiumCSSName.ref("textAlignment") to false,
+    ReadiumCSSName.ref("hyphens") to false,
+    ReadiumCSSName.ref("paraIndent") to false,
+    ReadiumCSSName.ref("wordSpacing") to false,
+    ReadiumCSSName.ref("letterSpacing") to false
 )
 
 val cjkVerticalPreset: MutableMap<ReadiumCSSName, Boolean> = mutableMapOf(
-        ReadiumCSSName.ref("scroll") to true,
-        ReadiumCSSName.ref("columnCount") to false,
-        ReadiumCSSName.ref("textAlignment") to false,
-        ReadiumCSSName.ref("hyphens") to false,
-        ReadiumCSSName.ref("paraIndent") to false,
-        ReadiumCSSName.ref("wordSpacing") to false,
-        ReadiumCSSName.ref("letterSpacing") to false
+    ReadiumCSSName.ref("scroll") to true,
+    ReadiumCSSName.ref("columnCount") to false,
+    ReadiumCSSName.ref("textAlignment") to false,
+    ReadiumCSSName.ref("hyphens") to false,
+    ReadiumCSSName.ref("paraIndent") to false,
+    ReadiumCSSName.ref("wordSpacing") to false,
+    ReadiumCSSName.ref("letterSpacing") to false
 )
 
 val forceScrollPreset: MutableMap<ReadiumCSSName, Boolean> = mutableMapOf(
-        ReadiumCSSName.ref("scroll") to true
+    ReadiumCSSName.ref("scroll") to true
 )
 
 val userSettingsUIPreset: MutableMap<ContentLayoutStyle, MutableMap<ReadiumCSSName, Boolean>> = mutableMapOf(
-        ContentLayoutStyle.layout("ltr") to ltrPreset,
-        ContentLayoutStyle.layout("rtl") to rtlPreset,
-        ContentLayoutStyle.layout("cjkv") to cjkVerticalPreset,
-        ContentLayoutStyle.layout("cjkh") to cjkHorizontalPreset
+    ContentLayoutStyle.layout("ltr") to ltrPreset,
+    ContentLayoutStyle.layout("rtl") to rtlPreset,
+    ContentLayoutStyle.layout("cjkv") to cjkVerticalPreset,
+    ContentLayoutStyle.layout("cjkh") to cjkHorizontalPreset
 )
 
 
