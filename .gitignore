@@ -1,12 +1,11 @@
 *.iml
 .gradle
-local.properties
+/local.properties
 /.idea/workspace.xml
 /.idea/libraries
-/.idea
 .DS_Store
 /build
 /captures
 .externalNativeBuild
-r2-shared/build
+r2-streamer/build
 .idea
