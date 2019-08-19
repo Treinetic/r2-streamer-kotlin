@@ -7,9 +7,14 @@ class Configurations {
 
     var needExport: Boolean = false
     var callback: Callback? = null
+    var imageListener:ImageClickListener?=null
 
     interface Callback {
         fun export(input: String): String
+    }
+
+    interface ImageClickListener {
+        fun onImageClick(url: String)
     }
 
 
@@ -23,7 +28,7 @@ class Configurations {
 
 
     fun clear() {
-
+        imageListener=null
         needExport = false
         callback = null
     }
