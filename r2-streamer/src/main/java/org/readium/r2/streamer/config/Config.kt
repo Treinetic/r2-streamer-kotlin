@@ -1,5 +1,7 @@
 package org.readium.r2.streamer.config
 
+import android.content.Context
+
 /**
  * Created by Nuwan on 3/25/19.
  */
@@ -14,7 +16,7 @@ class Configurations {
     }
 
     interface ImageClickListener {
-        fun onImageClick(url: String)
+        fun onImageClick(url: String,context:Context?)
     }
 
 
