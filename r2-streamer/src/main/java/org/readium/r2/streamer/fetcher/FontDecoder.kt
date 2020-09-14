@@ -10,6 +10,7 @@
 package org.readium.r2.streamer.fetcher
 
 import android.util.Log
+import androidx.annotation.Keep
 import com.mcxiaoke.koi.HASH
 import com.mcxiaoke.koi.ext.toHexBytes
 import org.readium.r2.shared.Publication
@@ -17,7 +18,7 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 import kotlin.experimental.xor
 
-
+@Keep
 class FontDecoder {
 
     private val adobe = 1024

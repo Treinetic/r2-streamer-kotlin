@@ -10,6 +10,7 @@
 package org.readium.r2.streamer.fetcher
 
 import android.util.Log
+import androidx.annotation.Keep
 import org.readium.r2.shared.drm.Drm
 import org.readium.r2.shared.Link
 import java.io.ByteArrayInputStream
@@ -17,7 +18,7 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.util.zip.Inflater
 
-
+@Keep
 class DrmDecoder {
 
 

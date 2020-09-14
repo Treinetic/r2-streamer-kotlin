@@ -9,10 +9,11 @@
 
 package org.readium.r2.streamer.fetcher
 
+import androidx.annotation.Keep
 import org.readium.r2.shared.Publication
 import org.readium.r2.streamer.container.Container
 import java.io.InputStream
-
+@Keep
 class Fetcher(var publication: Publication, var container: Container, private val userPropertiesPath: String?) {
     private var rootFileDirectory: String
     private var contentFilters: ContentFilters?

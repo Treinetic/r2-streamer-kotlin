@@ -10,6 +10,7 @@
 package org.readium.r2.streamer.server.handler
 
 import android.util.Log
+import androidx.annotation.Keep
 import org.nanohttpd.protocols.http.IHTTPSession
 import org.nanohttpd.protocols.http.NanoHTTPD.MIME_PLAINTEXT
 import org.nanohttpd.protocols.http.response.IStatus
@@ -22,7 +23,7 @@ import org.readium.r2.streamer.fetcher.Fetcher
 import java.io.IOException
 import java.io.InputStream
 
-
+@Keep
 class ResourceHandler : RouterNanoHTTPD.DefaultHandler() {
 
     companion object {

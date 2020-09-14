@@ -10,6 +10,7 @@
 package org.readium.r2.streamer.fetcher
 
 import android.util.Log
+import androidx.annotation.Keep
 import org.json.JSONArray
 import org.json.JSONObject
 import org.readium.r2.shared.*
@@ -17,7 +18,7 @@ import org.readium.r2.streamer.config.Configurations
 import org.readium.r2.streamer.container.Container
 import java.io.File
 import java.io.InputStream
-
+@Keep
 interface ContentFilters {
     var fontDecoder: FontDecoder
     var drmDecoder: DrmDecoder
